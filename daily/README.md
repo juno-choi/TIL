@@ -27,3 +27,29 @@ JPA에서 사용되는 cascade 종류 중 `PERSIST` `MERGE`에 대해서만 정�
 `PERSIST` : 새로운 엔티티를 저장할 때, 연관된 엔티티도 같이 저장됨
 
 `MERGE` : 준영속(detached) 상태의 엔티티를 다시 merge할 때, 연관된 엔티티도 같이 병합됨
+
+### 🟢 캐시 스탬피드(Thundering Herd)
+
+- 설명
+    - Cache Aside(캐시 미스 발생 시 적재) 전략 사용시 발생할 수 있는 문제
+    - 캐시가 비었을 때 동시 요청이 온다면 여러 쓰레드에서 DB read 후 Redis에 write 행위 발생
+    - 성능적으로 문제 발생
+- 해결
+    - Lock을 통한 해결
+        - 확실하게 여러 쓰레드가 동작하는 경우는 없어짐
+        - 락을 대기하기에 성능적 이슈는 여전
+    - 외부 재계산(External Recomputation) 방식
+        - 배치나 스케줄러 같은 외부 시스템을 사용하여 TTL 전에 재계산하여 Redis에 write
+        - 요청이 없는 경우에도 계속해서 계산을 하기에 메모리 낭비가 있음
+    - 확률적 조기 재계산(Probablistic Early Recomputation) 방식
+        - TTL 전에 각 쓰레드 별로 랜덤한 확률로서 재계산을 진행함
+        - 확률이기 때문에 횟수가 줄어들 수 있는거지 완벽한 해결책은 아님
+
+        ```kotlin
+        fun shouldRefreshCache(createdAt: Long, ttl: Long): Boolean {
+            val now = System.currentTimeMillis()
+            val delta = now - createdAt
+            val probability = exp(-1.0 * delta / ttl)
+            return Random.nextDouble() < probability
+        }
+        ```
