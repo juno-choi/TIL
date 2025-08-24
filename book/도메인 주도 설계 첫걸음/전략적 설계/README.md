@@ -53,7 +53,7 @@
 ## 🟠 바운디드 컨텍스트 연동
 
 ### 🟢 Context Map
-![img.png](image/part1/context%20map.png)
+![img.png](context%20map.png)
 
 - Bounded Context를 시각화 하여 관계들을 표현한 지도
 - 관계 사이에 패턴(OHS, ACL 등)을 라벨로 표시
