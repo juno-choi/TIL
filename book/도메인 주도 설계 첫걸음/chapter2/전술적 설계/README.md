@@ -338,3 +338,61 @@ class Account(
 
 ### 🟢 인프라 구성요소의 연동
 
+포트와 어댑터 아키텍처의 핵심 목적은 인프라스트럭처 구성요소로부터 시스템 비즈니스 로직을 분리하는 것이다.
+
+예를 들어
+
+```text
+DB 연동:
+UserRepository (도메인 포트)
+JpaUserRepository (Spring Data JPA 어댑터)
+
+외부 API 연동:
+PaymentPort (도메인 포트)
+PgPaymentAdapter (PG사 API 호출)
+
+메시징 연동:
+EventPublisherPort (도메인 포트)
+KafkaPublisherAdapter (Kafka 구현체)
+```
+
+다음과 같이 service 로직에서는 port를 의존하고 해당 port를 구현한 어댑터를 사용하게 된다.
+
+### 🟢 변형
+
+포트와 어댑터 패턴은 동일한 설계 원칙과 동일한 구성요소를 가진다고 해도 여러 용어로 불린다.
+- 헥사고날 아키텍처
+- 어니언 아키텍처
+- 클린 아키텍처
+
+애플리케이션 계층 = 서비스 계층 = 유스케이스 계층
+
+비즈니스 로직 계층 = 도메인 계층 = 핵심 계층
+
+### 🟢 CQRS
+
+CQRS(command-query responsibility segregation) 패턴은 포트와 어댑터와 동일하게 비즈니스 로직과 인프라스트럭처 관심사에 기반한다.
+
+하지만 시스템 데이터를 관리하는 방식이 다르다.
+
+**폴리글랏 모델링**
+
+시스템의 모든 요구사항을 해결하기는 어렵다.
+
+예를 들어 DB 시스템에서는 OLTP, OLAP와 같이 시스템 데이터의 다양한 표현이 필요할 수 있다.
+
+하나의 어플리케이션에서 실시간 데이터 처리는 NoSql로 분석, 보고용은 칼럼 저장소, 견고한 검색은 검색 엔진을 사용할 수 있다.
+
+플리글랏 모델링은 비즈니스 도메인 모델에서도 여러 모델링을 혼합하여 사용하자는 것이다.
+
+- 핵심 도메인: 풍부한 도메인 모델 (DDD, Aggregate, Domain Event)
+- 단순 도메인: 트랜잭션 스크립트 or Active Record
+- 조회 위주 도메인: CQRS + Read Model (Projection)
+- 외부 연동: ACL (Anti-Corruption Layer) 로 감싸 단순화
+
+**구현**
+커맨드 실행과 읽기 모델로 시스템 모델의 책임을 분리시킨다.
+
+**커맨드 실행 모델**
+
+CQRS
