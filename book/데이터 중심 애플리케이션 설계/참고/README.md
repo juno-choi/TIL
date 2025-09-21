@@ -1,0 +1,1 @@
+https://sungjk.github.io/2024/06/22/ddia.html
